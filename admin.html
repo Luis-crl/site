@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard Admin</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <h2>🌱 Admin</h2>
+  <ul>
+    <li>Dashboard</li>
+    <li>Solicitações</li>
+  </ul>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <div class="header">
+    <h1>Painel de Controle</h1>
+  </div>
+
+  <!-- CARDS -->
+  <div class="cards">
+    <div class="card">
+      <h3>Total</h3>
+      <p id="total">0</p>
+    </div>
+
+    <div class="card">
+      <h3>Pendentes</h3>
+      <p id="pendentes">0</p>
+    </div>
+
+    <div class="card">
+      <h3>Aprovados</h3>
+      <p id="aprovados">0</p>
+    </div>
+  </div>
+
+  <!-- LISTA -->
+  <div class="lista" id="lista"></div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyALKIKPp6mACEDtBlPRwUJT5M4eI0cur3Y",
+  authDomain: "coleta-celetiva.firebaseapp.com",
+  databaseURL: "https://coleta-celetiva-default-rtdb.firebaseio.com/",
+  projectId: "coleta-celetiva",
+  storageBucket: "coleta-celetiva.firebasestorage.app",
+  messagingSenderId: "731957827084",
+  appId: "1:731957827084:web:bb16f1ca26529619a98029"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const listaDiv = document.getElementById("lista");
+
+const totalEl = document.getElementById("total");
+const pendentesEl = document.getElementById("pendentes");
+const aprovadosEl = document.getElementById("aprovados");
+
+onValue(ref(db, "coletas"), (snapshot) => {
+  listaDiv.innerHTML = "";
+
+  const dados = snapshot.val() || {};
+
+  let total = 0;
+  let pendentes = 0;
+  let aprovados = 0;
+
+  for (let id in dados) {
+    total++;
+    const item = dados[id];
+
+    if (item.status === "Pendente") pendentes++;
+    if (item.status === "Aprovado") aprovados++;
+
+    const div = document.createElement("div");
+    div.classList.add("item");
+
+    div.innerHTML = `
+      <strong>${item.nome}</strong> - ${item.material} <br>
+      📍 ${item.localizacao} <br>
+      Status: ${item.status}
+
+      <div class="buttons">
+        <button class="aprovar" onclick="aprovar('${id}')">Aprovar</button>
+        <button class="rejeitar" onclick="rejeitar('${id}')">Rejeitar</button>
+      </div>
+    `;
+
+    listaDiv.appendChild(div);
+  }
+
+  totalEl.innerText = total;
+  pendentesEl.innerText = pendentes;
+  aprovadosEl.innerText = aprovados;
+});
+
+window.aprovar = (id) => {
+  update(ref(db, "coletas/" + id), {
+    status: "Aprovado"
+  });
+};
+
+window.rejeitar = (id) => {
+  update(ref(db, "coletas/" + id), {
+    status: "Rejeitado"
+  });
+};
+</script>
+
+</body>
+</html>
